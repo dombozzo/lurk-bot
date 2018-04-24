@@ -3,6 +3,7 @@
 import os, requests, functools, queue, multiprocessing, sys, signal
 from bs4 import BeautifulSoup
 from urllib.request import urlparse
+import re
 
 MAX_LINKS = 4
 NUMBER_WORKERS = 1
@@ -20,10 +21,13 @@ def get_links(html, url):
     '''Extract all links from an html page'''
     links = set()
     soup = BeautifulSoup(html, "lxml")
+    
 
     # Extract all links from html of html
     for tag in soup.find_all('a', href=True):
-        links.add(tag['href'])
+        if len(re.findall(r'google', tag['href'])) == 0:
+            print(tag['href'])
+            links.add(tag['href'])
 
     links = map(functools.partial(prepend_links, url), links)
     links = filter(validate_links, links)
@@ -98,7 +102,7 @@ def main():
     q = m.Queue(MAX_LINKS)
     visited = m.Queue(MAX_LINKS)
     q.put_nowait('https://reddit.com')
-    q.put_nowait('https://google.com')
+    q.put_nowait('https://google.com/search?q=nike+shoes')
     q.put_nowait('https://bing.com')
     pool.map(functools.partial(crawl, q, visited), range(NUMBER_WORKERS))
     pool.close()
