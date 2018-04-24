@@ -4,7 +4,7 @@ import os, requests, functools, queue, multiprocessing, sys, signal
 from bs4 import BeautifulSoup
 from urllib.request import urlparse
 
-MAX_LINKS = 50
+MAX_LINKS = 4
 NUMBER_WORKERS = 1
 graph ={}
 
@@ -65,7 +65,7 @@ def make_request(url, q, visited, process):
             # Get other links
             links = get_links(response.text, url)
             graph[url] = list(links)
-            print(graph)
+            #print(graph)
             # Add other links to queue
             for link in links:
                 q.put_nowait(link)
@@ -79,6 +79,9 @@ def crawl(q, visited, process):
     while not q.empty() or not started:
         started = True
         make_request(q.get(), q, visited, process)
+
+    #this is where the graph is completely built
+    print(graph)
 
 def main():
     global MAX_LINKS, NUMBER_WORKERS
@@ -96,10 +99,9 @@ def main():
     visited = m.Queue(MAX_LINKS)
     q.put_nowait('https://reddit.com')
     q.put_nowait('https://google.com')
-    #q.put_nowait('https://bing.com')
+    q.put_nowait('https://bing.com')
     pool.map(functools.partial(crawl, q, visited), range(NUMBER_WORKERS))
     pool.close()
-
 
 
 
