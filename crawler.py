@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from urllib.request import urlparse
 import re
 
-MAX_LINKS = 4
+MAX_LINKS = 5
 NUMBER_WORKERS = 1
 ENGINE = "google"
 graph ={}
@@ -31,10 +31,19 @@ def get_links(html, url):
     links = set()
     soup = BeautifulSoup(html, "lxml")
 
+    if (url.find('google') != -1):
+        engine = "google"
+    elif (url.find('yahoo')!= -1):
+        engine = "yahoo"
+    elif (url.find('ask')!= -1):
+        engine = 'ask'
+    else:
+        engine = 'bing'
+
     coolest = set()
     # Extract all links from html of html
     for tag in soup.find_all('a', href=True):
-        if len(re.findall(ENGINE, tag['href'])) == 0:
+        if len(re.findall(engine, tag['href'])) == 0:
             matches = re.findall(r"http.*com",tag['href'])
             for match in matches:
                 money = re.findall(r"//.*\.",match)
@@ -47,9 +56,11 @@ def get_links(html, url):
                     coolest.add(money)
 
             #     links.add(tag['href'])
-    print(coolest)
+    #print(coolest)
     links = map(functools.partial(prepend_links, url), links)
     links = filter(validate_links, links)
+    graph[engine] = coolest
+
 
     return links
 
@@ -89,7 +100,6 @@ def make_request(url, q, visited, process):
 
             # Get other links
             links = get_links(response.text, url)
-            graph[url] = list(links)
             #print(graph)
             # Add other links to queue
             for link in links:
@@ -106,7 +116,7 @@ def crawl(q, visited, process):
         make_request(q.get(), q, visited, process)
 
     #this is where the graph is completely built
-    #print(graph)
+    print(graph)
 
 def main():
     global MAX_LINKS, NUMBER_WORKERS, ENGINE
@@ -154,9 +164,15 @@ def main():
         elif ENGINE == "yahoo":
             s = "https://search.yahoo.com/search?p=" + search
 
-    print("Engine: {}   Search: {}  URL: {}".format(ENGINE,sys.argv[-1],s))
+        q.put_nowait(s)
+    else:
+        q.put_nowait("https://www.google.com/search?q=" + search)
+        q.put_nowait("https://www.bing.com/search?q=" + search)
+        q.put_nowait("https://www.ask.com/web?q=" + search)
+        q.put_nowait("https://search.yahoo.com/search?p=" + search)
 
-    q.put_nowait(s)
+    #print("Engine: {}   Search: {}  URL: {}".format(ENGINE,sys.argv[-1],s))
+
     pool.map(functools.partial(crawl, q, visited), range(NUMBER_WORKERS))
     pool.close()
 
