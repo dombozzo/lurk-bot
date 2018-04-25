@@ -1,30 +1,28 @@
 #!/usr/bin/env python3
-import os, requests, functools, queue, multiprocessing, sys, signal
+import os, requests, functools, queue, sys, signal
 from bs4 import BeautifulSoup
 from urllib.request import urlparse
 import re
 
 MAX_LINKS = 5
 NUMBER_WORKERS = 1
-ENGINE = "google"
+ENGINE = "Google"
 graph ={}
 
 def usage(status):
-    print('''Usage: {} [OPTIONS] \"SEARCH\"
+    print('''Usage: [OPTIONS] \"SEARCH\"
         -m INT  [set max links]
         -c INT [set number workers]
         -e STRING [set search engine: google, yahoo, bing, ask]
         -a [get output from all engines]
-        -h help '''.format(sys.argv[0]))
+        -h help ''')
     sys.exit(status)
 
 def signal_handler(signal, frame):
     sys.exit(0)
 
-def shutdown(q):
-    print('shutting')
-    while not q.empty():
-        q.get_nowait()
+def shutdown():
+    sys.exit(0)
 
 def get_links(html, url):
     '''Extract all links from an html page'''
@@ -56,13 +54,11 @@ def get_links(html, url):
                     coolest.add(money)
 
             #     links.add(tag['href'])
-    #print(coolest)
-    links = map(functools.partial(prepend_links, url), links)
-    links = filter(validate_links, links)
     graph[engine] = coolest
+    #links = map(functools.partial(prepend_links, url), links)
+    #links = filter(validate_links, links)
 
-
-    return links
+    return coolest
 
 def prepend_links(root, url):
     '''If link starts with /, add base url to it'''
@@ -77,13 +73,15 @@ def validate_links(link):
     '''Validate if link has http or https and a nonempty domain'''
     return not (urlparse(link).scheme is '' or urlparse(link).netloc is '')
 
-def make_request(url, q, visited, process):
+def make_request(q, visited):
     '''Make single request, process html and add links to queue'''
-    # headers  = {'user-agent': 'reddit-{}'.format(os.environ['USER'])}
+    # Get url
+    url = q.get()
+
+    #headers  = {'user-agent': 'reddit-{}'.format(os.environ['USER'])}
     try:
         # Try to make request
         for _ in range(5):
-            #response = requests.get(url, headers=headers)
             response = requests.get(url)
 
             if response.status_code == 200:
@@ -93,45 +91,34 @@ def make_request(url, q, visited, process):
             # Add url to visited
             visited.put_nowait(url)
             if visited.qsize() >= MAX_LINKS:
-                shutdown(q)
+                shutdown()
                 return
-            #print('{}: Visited url: {}, visited: {}, length of queue: {}'.format(process, url, visited.qsize(), q.qsize()))
-            #print("Engine: {}   Search: {}".format(ENGINE,sys.argv[-1]))
 
             # Get other links
+
             links = get_links(response.text, url)
-            #print(graph)
+
             # Add other links to queue
             for link in links:
                 q.put_nowait(link)
     except KeyboardInterrupt:
-        shutdown(q)
+        shutdown()
     except:
         pass
 
-def crawl(q, visited, process):
-    started = False
-    while not q.empty() or not started:
-        started = True
-        make_request(q.get(), q, visited, process)
-
-    #this is where the graph is completely built
-    print(graph)
-
-def main():
-    global MAX_LINKS, NUMBER_WORKERS, ENGINE
-
+def crawl(cmdargs):
+    global MAX_LINKS, ENGINE
     # check min args
-    if len(sys.argv) < 2:
+    if len(cmdargs) < 2:
         usage(1)
     # set search
-    search = sys.argv[-1]
+    search = cmdargs[-1]
     # spaces -> +
     search = search.replace(' ','+')
 
     # parse options
     SEARCH_ALL = False
-    args = sys.argv[1:]
+    args = cmdargs[1:]
     while len(args) and args[0].startswith('-') and len(args[0]) > 1:
         arg = args.pop(0)
         if arg == '-m':
@@ -147,10 +134,8 @@ def main():
         else:
             usage(1)
 
-    pool = multiprocessing.Pool(NUMBER_WORKERS)
-    m = multiprocessing.Manager()
-    q = m.Queue(MAX_LINKS)
-    visited = m.Queue(MAX_LINKS)
+    q = queue.Queue(MAX_LINKS)
+    visited = queue.Queue(MAX_LINKS)
 
     # set start URL w/ engine & search
     s = ""
@@ -171,15 +156,12 @@ def main():
         q.put_nowait("https://www.ask.com/web?q=" + search)
         q.put_nowait("https://search.yahoo.com/search?p=" + search)
 
-    #print("Engine: {}   Search: {}  URL: {}".format(ENGINE,sys.argv[-1],s))
 
-    pool.map(functools.partial(crawl, q, visited), range(NUMBER_WORKERS))
-    pool.close()
+    while not q.empty():
+        make_request(q, visited)
 
+    return(graph)
 
-
-if __name__ == "__main__":
-    # Catch Ctrl-C
-    signal.signal(signal.SIGINT, signal_handler)
-
-    main()
+# if __name__ == "__main__":
+#     signal.signal(signal.SIGINT, signal_handler)
+#     main()
