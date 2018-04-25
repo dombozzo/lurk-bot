@@ -19,7 +19,7 @@ def build(g):
         i +=1
 
         for link in g[engine]:
-            if link not in tset:
+            if link not in tset and link not in g:
                 temp={}
                 temp['name'] = link
                 temp['group'] = 2

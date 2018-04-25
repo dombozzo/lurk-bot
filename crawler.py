@@ -160,7 +160,7 @@ def crawl(cmdargs):
     while not q.empty():
         make_request(q, visited)
 
-    return(graph)
+    return graph, cmdargs[-1]
 
 # if __name__ == "__main__":
 #     signal.signal(signal.SIGINT, signal_handler)

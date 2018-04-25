@@ -4,6 +4,14 @@ import crawler
 import build_graph
 import plot_graph
 
-tempgraph = crawler.crawl(sys.argv)
+#crawl the web
+tempgraph, search = crawler.crawl(sys.argv)
+
+#turn the graph into dictionary json format for the plot
 graph = build_graph.build(tempgraph)
-plot_graph.make_plot(graph)
+
+#plot graph
+plot_graph.make_plot(graph, search)
+
+#print success
+print('Your search was a success! See plotly for results.')

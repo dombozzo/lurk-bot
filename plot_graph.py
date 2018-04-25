@@ -1,19 +1,23 @@
+#!/usr/bin/env python3
+
 import igraph as ig
 import plotly.plotly as py
 from plotly.graph_objs import *
 
 # read graph data from json file
 import json
-import urllib2
 
-def make_plot(data):
+
+def make_plot(data, search):
     # data = []
     # req = urllib2.Request("https://raw.githubusercontent.com/plotly/datasets/master/miserables.json")
     # opener = urllib2.build_opener()
     # f = opener.open(req)
     # data = json.loads(f.read())
 
-    print data.keys()
+    #print data.keys()
+    # title string
+    tstring = "Network Plot generated from \"{}\"".format(search)
 
     # get num of nodes
 
@@ -82,7 +86,7 @@ def make_plot(data):
               )
 
     layout = Layout(
-             title="Network of coappearances of characters in Victor Hugo's novel<br> Les Miserables (3D visualization)",
+             title= tstring,
              width=1000,
              height=1000,
              showlegend=False,
@@ -98,7 +102,7 @@ def make_plot(data):
         annotations=Annotations([
                Annotation(
                showarrow=False,
-                text="Data source: <a href='http://bost.ocks.org/mike/miserables/miserables.json'>[1] miserables.json</a>",
+                text="Data source: the coolest",
                 xref='paper',
                 yref='paper',
                 x=0,
@@ -115,4 +119,5 @@ def make_plot(data):
     data=Data([trace1, trace2])
     fig=Figure(data=data, layout=layout)
 
-    py.iplot(fig, filename='Les-Miserables')
+    fname = search.replace(' ','+')
+    py.iplot(fig, filename=fname)
