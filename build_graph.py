@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
 def build(g):
+    tset= set() # ensures that no entry is added twice as a vertex
+    graph = {} # final product: dictionary filled w/ lists of dictionaries
+    location = {} # stores ordering of each vertex for reference
+    i = 0 # also for tracking ordering
 
-    tset=set()
-
-    graph = {}
-    nodes =[]
-    location = {}
-    i =0
-
+    # build node list
+    nodes =[] # stores vertices of graph
     for engine in g:
         tset.add(engine)
         e = {}
@@ -20,7 +19,7 @@ def build(g):
 
         for link in g[engine]:
             if link not in tset and link not in g:
-                temp={}
+                temp= {}
                 temp['name'] = link
                 temp['group'] = 2
                 tset.add(link)
@@ -31,7 +30,8 @@ def build(g):
 
     graph['nodes'] = nodes
 
-    edges = []
+    # build edge list
+    edges = [] # stores edges of graph
     for engine in g:
         for link in g[engine]:
             edge ={}
@@ -42,4 +42,5 @@ def build(g):
 
     graph['links'] = edges
 
+    # return graph complete w/ node list & edge list
     return graph

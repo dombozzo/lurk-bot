@@ -4,15 +4,17 @@ from bs4 import BeautifulSoup
 from urllib.request import urlparse
 import re
 
+# Globals
 MAX_LINKS = 5
-NUMBER_WORKERS = 1
-ENGINE = "Google"
+E_NAMES = {"google","yahoo","bing","ask"}
+ENGINE = "google"
 graph ={}
 
-def usage(status):
+def usage(status=0):
     print('''Usage: [OPTIONS] \"SEARCH\"
         -m INT  [set max links]
         -a [get output from all engines]
+        -e ENGINE [google,yahoo,ask,bing]
         -h help ''')
     sys.exit(status)
 
@@ -32,9 +34,9 @@ def get_links(html, url):
     elif (url.find('yahoo')!= -1):
         engine = "yahoo"
     elif (url.find('ask')!= -1):
-        engine = 'ask'
+        engine = "ask"
     else:
-        engine = 'bing'
+        engine = "bing"
 
     coolest = set()
     # Extract all links from html of html
@@ -50,35 +52,16 @@ def get_links(html, url):
 
                 if len(money) < 50:
                     coolest.add(money)
-
-            #     links.add(tag['href'])
     graph[engine] = coolest
-    #links = map(functools.partial(prepend_links, url), links)
-    #links = filter(validate_links, links)
-
     return coolest
-
-def prepend_links(root, url):
-    '''If link starts with /, add base url to it'''
-    if root[-1] == '/':
-        root = root[:-1]
-    if url[0] == '/':
-        return root + url
-    else:
-        return url
-
-def validate_links(link):
-    '''Validate if link has http or https and a nonempty domain'''
-    return not (urlparse(link).scheme is '' or urlparse(link).netloc is '')
 
 def make_request(q, visited):
     '''Make single request, process html and add links to queue'''
     # Get url
     url = q.get()
 
-    #headers  = {'user-agent': 'reddit-{}'.format(os.environ['USER'])}
     try:
-        # Try to make request
+        # try to make request
         for _ in range(5):
             response = requests.get(url)
 
@@ -86,14 +69,13 @@ def make_request(q, visited):
                 break
 
         if response.status_code == 200:
-            # Add url to visited
+            # add url to visited
             visited.put_nowait(url)
             if visited.qsize() >= MAX_LINKS:
                 shutdown()
                 return
 
-            # Get other links
-
+            # get other links
             links = get_links(response.text, url)
 
             # Add other links to queue
@@ -105,61 +87,61 @@ def make_request(q, visited):
         pass
 
 def crawl(cmdargs):
-    global MAX_LINKS, ENGINE
+    global MAX_LINKS, ENGINE, E_NAMES
+
     # check min args
     if len(cmdargs) < 2:
         usage(1)
-    # set search
-    search = cmdargs[-1]
-    # spaces -> +
-    search = search.replace(' ','+')
 
-    # parse options
-    SEARCH_ALL = False
+    # parse options (from lurker)
+    SEARCH_ALL = True
     args = cmdargs[1:]
-    while len(args) and args[0].startswith('-') and len(args[0]) > 1:
+    search = ""
+    while len(args) and len(args[0]) > 1:
         arg = args.pop(0)
-        if arg == '-m':
+        if arg == '-m': # set max links
             MAX_LINKS = int(args.pop(0))
-        elif arg == '-c':
-            NUMBER_WORKERS = int(args.pop(0))
-        elif arg == '-a':
+        elif arg == '-a': # search all engines
             SEARCH_ALL = True
-        elif arg == '-e':
-            ENGINE = args.pop(0)
-        elif arg == '-h':
+        elif arg == '-e': # for single engine search
+            SEARCH_ALL = False
+            ENGINE = args.pop(0).lower()
+            if ENGINE not in E_NAMES: # invalid search engine entered
+                usage(1)
+        elif arg == '-h': # usage
             usage(0)
-        else:
-            usage(1)
+        else: # set search & manipulate to match URL format
+            search = arg.replace(' ','+')
+
+    # make sure search got set
+    if not search:
+        usage(1)
 
     q = queue.Queue(MAX_LINKS)
     visited = queue.Queue(MAX_LINKS)
 
     # set start URL w/ engine & search
-    s = ""
-    if not SEARCH_ALL:
+    URL = ""
+    if not SEARCH_ALL: # search single engine
         if ENGINE == "google":
-            s = "https://www.google.com/search?q=" + search
+            URL = "https://www.google.com/search?q=" + search
         elif ENGINE == "bing":
-            s = "https://www.bing.com/search?q=" + search
+            URL = "https://www.bing.com/search?q=" + search
         elif ENGINE == "ask":
-            s = "https://www.ask.com/web?q=" + search
+            URL = "https://www.ask.com/web?q=" + search
         elif ENGINE == "yahoo":
-            s = "https://search.yahoo.com/search?p=" + search
+            URL = "https://search.yahoo.com/search?p=" + search
 
-        q.put_nowait(s)
-    else:
+        q.put_nowait(URL) # push created URL (from single engine) onto queue
+    else: # push all URLs onto queue
         q.put_nowait("https://www.google.com/search?q=" + search)
         q.put_nowait("https://www.bing.com/search?q=" + search)
         q.put_nowait("https://www.ask.com/web?q=" + search)
         q.put_nowait("https://search.yahoo.com/search?p=" + search)
 
 
-    while not q.empty():
+    while not q.empty(): # make requests to build out `graph`
         make_request(q, visited)
 
+    # return finished product with results from all searches
     return graph, cmdargs[-1]
-
-# if __name__ == "__main__":
-#     signal.signal(signal.SIGINT, signal_handler)
-#     main()
