@@ -9,28 +9,20 @@ import json
 
 
 def make_plot(data, search):
-    # data = []
-    # req = urllib2.Request("https://raw.githubusercontent.com/plotly/datasets/master/miserables.json")
-    # opener = urllib2.build_opener()
-    # f = opener.open(req)
-    # data = json.loads(f.read())
 
-    #print data.keys()
     # title string
-    tstring = "Network Plot generated from \"{}\"".format(search)
+    tstring = "lurk-bot results generated from \"{}\"".format(search)
 
     # get num of nodes
-
     N=len(data['nodes'])
 
     # define list of edges
-
     L=len(data['links'])
     Edges=[(data['links'][k]['source'], data['links'][k]['target']) for k in range(L)]
 
     G=ig.Graph(Edges, directed=False)
 
-    #extract group and __name__
+    #extract group and name
 
     labels=[]
     group=[]
@@ -102,7 +94,7 @@ def make_plot(data, search):
         annotations=Annotations([
                Annotation(
                showarrow=False,
-                text="Data source: the coolest",
+                text="Data source: lurk-bot",
                 xref='paper',
                 yref='paper',
                 x=0,

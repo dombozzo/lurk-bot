@@ -12,8 +12,6 @@ graph ={}
 def usage(status):
     print('''Usage: [OPTIONS] \"SEARCH\"
         -m INT  [set max links]
-        -c INT [set number workers]
-        -e STRING [set search engine: google, yahoo, bing, ask]
         -a [get output from all engines]
         -h help ''')
     sys.exit(status)
