@@ -4,46 +4,40 @@ import igraph as ig
 import plotly.plotly as py
 from plotly.graph_objs import *
 
-# read graph data from json file
-import json
-
 
 def make_plot(data, search):
-
     # title string
     tstring = "lurk-bot results generated from \"{}\"".format(search)
 
-    # get num of nodes
-    N=len(data['nodes'])
+    # get number of nodes
+    N = len(data['nodes'])
 
     # define list of edges
-    L=len(data['links'])
-    Edges=[(data['links'][k]['source'], data['links'][k]['target']) for k in range(L)]
+    L = len(data['links'])
+    Edges = [(data['links'][k]['source'], data['links'][k]['target']) for k in range(L)]
 
-    G=ig.Graph(Edges, directed=False)
+    # instantiate plotly graph
+    G = ig.Graph(Edges, directed=False)
 
     #extract group and name
-
-    labels=[]
-    group=[]
+    labels = []
+    group = []
     for node in data['nodes']:
         labels.append(node['name'])
         group.append(node['group'])
 
     # get node positions
-
-    layt=G.layout('kk', dim=3)
+    layt = G.layout('kk', dim=3)
 
     # set data for plotly
-
-    Xn=[layt[k][0] for k in range(N)]# x-coordinates of nodes
-    Yn=[layt[k][1] for k in range(N)]# y-coordinates
-    Zn=[layt[k][2] for k in range(N)]# z-coordinates
+    Xn=[layt[k][0] for k in range(N)] # x-coordinates of nodes
+    Yn=[layt[k][1] for k in range(N)] # y-coordinates
+    Zn=[layt[k][2] for k in range(N)] # z-coordinates
     Xe=[]
     Ye=[]
     Ze=[]
     for e in Edges:
-        Xe+=[layt[e[0]][0],layt[e[1]][0], None]# x-coordinates of edge ends
+        Xe+=[layt[e[0]][0],layt[e[1]][0], None] # x-coordinates of edge ends
         Ye+=[layt[e[0]][1],layt[e[1]][1], None]
         Ze+=[layt[e[0]][2],layt[e[1]][2], None]
 
@@ -108,8 +102,10 @@ def make_plot(data, search):
             ]),    )
 
 
-    data=Data([trace1, trace2])
-    fig=Figure(data=data, layout=layout)
+    data = Data([trace1, trace2])
+    fig = Figure(data=data, layout=layout)
 
+    # set name for plotly graph
     fname = search.replace(' ','+')
+    # plot graph in plotly
     py.iplot(fig, filename=fname)

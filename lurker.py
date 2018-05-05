@@ -2,7 +2,7 @@
 import sys
 import crawler
 import build_graph
-import plot_graph
+#import plot_graph
 
 #crawl the web
 tempgraph, search = crawler.crawl(sys.argv)
@@ -15,8 +15,7 @@ print("Output of build function:")
 print(graph)
 
 #plot graph
-plot_graph.make_plot(graph, search)
+#plot_graph.make_plot(graph, search)
 
 #print success
-print()
-print('Your search was a success! See plotly for results.')
+print("\nYour search was a success! See plotly for results.")
