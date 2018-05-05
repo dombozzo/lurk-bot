@@ -2,18 +2,18 @@ Project Dependencies and Installation Guide:
 --------------------------------------------
 To be able to run lurkbot, a machine must have the following python
 libraries compatible with python3:
-sys
-os
-requests
-re
-functools
-queue
-signal
-bs4
-urllib
-re
-igraph
-plotly
+- sys
+- os
+- requests
+- re
+- functools
+- queue
+- signal
+- bs4
+- urllib
+- re
+- igraph
+- plotly
 
 All of these were installed to our local machines by using
 pip install (library)
@@ -65,3 +65,34 @@ nike shoes.
 
 Description of Makefile and Test-Suite:
 ---------------------------------------
+
+Since our programs are written in python, the Makefile for lurk-bot is
+relatively simple, primarily intended for use in testing. The Makefile contains
+the following options:
+- test (which is same as test-all)
+- test-all (runs test-wc and test-diff)
+- test-diff (runs ./test_diff.py)
+- test-wc (runs ./test_wc.py)
+- clean
+
+The scripts test_wc.py and test_diff.py are used to test the output
+of lurk-bot for correctness. Both scripts use a predetermined input
+(test_graph) to run lurk-bot and a known output (output.txt) to verify the
+correctness of the results.
+
+As hinted by the name, test_diff uses the Unix command `diff` to compare
+lurk-bot output (testfile.txt) to a known output file (output.txt).
+Since lurk-bot utilizes python (unordered) sets for its implementation, the
+result of this test script can often be deceiving. We recommend that the user
+go manually inspect the output of diff; often the files will have the same
+content in a different ordering.
+
+Since using test_diff can produce slightly confusing output, test_wc is a
+simple means to compare lurk-bot output with known output. test_wc
+uses the character count (Unix command `wc`) from each file to determine
+(with relative authority) if the two outputs are identical. We are aware that
+this test can technically be tricked/faulty, but for the scope of our project
+it is an extremely efficient and accurate means for gauging the
+correctness of our application.
+
+
