@@ -13,4 +13,4 @@ test-diff:
 
 clean:
 	@echo "cleaning..."
-	@rm testfile.txt
+	@rm testfile*.txt
