@@ -1,0 +1,7 @@
+Output of crawler function:
+{'a': {'w', 'x', 'z', 'y'}, 'b': {'w', 'z', 'k'}, 'c': {'k', 'z'}, 'd': {'x', 'z'}}
+
+Output of build function:
+{'nodes': [{'name': 'a', 'group': 1}, {'name': 'w', 'group': 2}, {'name': 'x', 'group': 2}, {'name': 'z', 'group': 2}, {'name': 'y', 'group': 2}, {'name': 'b', 'group': 1}, {'name': 'k', 'group': 2}, {'name': 'c', 'group': 1}, {'name': 'd', 'group': 1}], 'links': [{'source': 0, 'target': 1, 'value': 1}, {'source': 0, 'target': 2, 'value': 1}, {'source': 0, 'target': 3, 'value': 1}, {'source': 0, 'target': 4, 'value': 1}, {'source': 5, 'target': 1, 'value': 1}, {'source': 5, 'target': 3, 'value': 1}, {'source': 5, 'target': 6, 'value': 1}, {'source': 7, 'target': 6, 'value': 1}, {'source': 7, 'target': 3, 'value': 1}, {'source': 8, 'target': 2, 'value': 1}, {'source': 8, 'target': 3, 'value': 1}]}
+
+Your search was a success! See plotly for results.
